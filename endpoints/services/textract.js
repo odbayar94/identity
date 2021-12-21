@@ -9,7 +9,6 @@ var findArray;
 export default async function ({ event }) {
 
   let { imageName } = JSON.parse(event.body);
-  console.log("image ", imageName);
 
   const ttparams = {
     DocumentLocation: {
@@ -19,9 +18,7 @@ export default async function ({ event }) {
   };
 
   const analysis = await textract.startDocumentAnalysis(ttparams).promise();
-  console.log(analysis);
   const JobId = analysis.JobId;
-  console.log("Waiting for processing");
   let response = {};
   do {
     await sleep(1000);
