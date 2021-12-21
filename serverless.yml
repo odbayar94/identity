@@ -51,14 +51,6 @@ provider:
       Resource: "*"
 
 functions:
-  hello:
-    handler: handler.hello
-    events:
-      - http:
-          path: /hello
-          method: get
-          cors: true
-
   endpoints:
     handler: endpoints/handler.api
     events:

@@ -7,7 +7,8 @@ export default async function ({ event }) {
   const requestBody = event && event.body ? JSON.parse(event.body) : {};
   try {
     await connectDb();
-    const email = requestBody.email;
+    const {email, firstName, lastName, stateRegNumber,avatar} = requestBody;
+    
     try {
       const existingUser = await User.findOne({
         email: email
@@ -23,7 +24,11 @@ export default async function ({ event }) {
       console.log("error during selecting from mongodb", e);
     }
     const user = await User.create({
-      email: email
+      email,
+      firstName,
+      lastName,
+      stateRegNumber,
+      avatar
     });
 
     return generateResponse(201, {
