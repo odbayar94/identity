@@ -40,6 +40,8 @@ provider:
     JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
     JWT_REFRESH_TOKEN_SECRET: ${self:custom.secrets.JWT_REFRESH_TOKEN_SECRET}
     MONGODB_HOST: ${self:custom.secrets.MONGODB_HOST}
+    AWS_BUCKET_NAME: ${self:custom.secrets.AWS_BUCKET_NAME}
+    AWS_BUCKET_REGION: ${self:custom.secrets.AWS_BUCKET_REGION}
 
   iamRoleStatements:
     - Effect: Allow

@@ -68,8 +68,17 @@
     }
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.44.0",
+    "@aws-sdk/client-textract": "^3.43.0",
+    "@aws-sdk/node-http-handler": "^3.40.0",
+    "aws-sdk": "^2.1047.0",
+    "canvas": "^2.8.0",
+    "commander": "^8.3.0",
     "fs": "^0.0.1-security",
+    "image-size": "^1.0.0",
+    "images": "^3.2.3",
     "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
     "mongoose": "^6.1.2",
     "path": "^0.12.7",
     "serverless-aws-static-file-handler": "^3.0.9"
