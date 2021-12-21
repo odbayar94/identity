@@ -1,0 +1,72 @@
+service: myuser
+frameworkVersion: "2"
+disabledDeprecations:
+  - CLI_OPTIONS_SCHEMA
+plugins:
+  - serverless-offline
+  - serverless-plugin-warmup
+  - serverless-webpack
+  - serverless-plugin-include-dependencies
+package:
+  excludeDevDependencies: false
+
+custom:
+  warmup:
+    enabled: true
+  secrets: ${file(./stages/env_${opt:stage, self:custom.defaultStage}.json)}
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules:
+      forceExclude:
+        - aws-sdk
+  defaultStage: local
+  stages:
+    - ${opt:stage}
+    - development
+    - staging
+    - production
+    - local
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+  stage: ${opt:stage, 'development'}
+  region: ap-northeast-2
+  profile: ${self:custom.secrets.PROFILE}
+  timeout: 25
+  environment:
+    STAGE: ${self:custom.secrets.STAGE}
+    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+    JWT_REFRESH_TOKEN_SECRET: ${self:custom.secrets.JWT_REFRESH_TOKEN_SECRET}
+    MONGODB_HOST: ${self:custom.secrets.MONGODB_HOST}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+        - execute-api:*
+        - s3:*
+        - ses:*
+      Resource: "*"
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: /hello
+          method: get
+          cors: true
+
+  endpoints:
+    handler: endpoints/handler.api
+    events:
+      - http:
+          path: endpoint/{functionName}
+          method: any
+          cors: true
+          request:
+            parameters:
+              paths:
+                functionName: true

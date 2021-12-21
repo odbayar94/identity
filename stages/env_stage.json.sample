@@ -1,0 +1,9 @@
+{
+  "REGION": "ap-southeast-1",
+  "JWT_SECRET": "jwtsecret",
+  "JWT_REFRESH_TOKEN_SECRET": "jwtrefresh",
+  "PROFILE": "odbayar94",
+  "MONGODB_HOST": "mongodb+srv://amazonapi:HkUuBqdNGhk@cluster0.yt2pn.mongodb.net/identity?retryWrites=true&w=majority",
+  "REDIS": "redis://127.0.0.1:6379",
+  "REDIS_DB": "1"
+}
