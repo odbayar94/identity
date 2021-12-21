@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Бүртгэл мэдээлэл</title>
+    <title>Upload file to S3</title>
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/axios@0.2.1/dist/axios.min.js"></script>
   </head>
   <body>
     <div id="app">
       <h1>Хэрэглэгч бүртгэх хэсэг</h1>
+      <!-- <h1>{{userInfo.lastName}}</h1> -->
 
       <div v-if="!image">
         <h2>Та өөрийн иргэний үнэмлэхний зурыг оруулна уу</h2>
@@ -15,12 +16,16 @@
       </div>
       <div v-else>
         <img :src="image" />
+
         <button v-if="!uploadURL" @click="removeImage">Арилгах</button>
         <button v-if="!uploadURL" @click="uploadImage">Зураг илгээх</button>
       </div>
-      <div v-if="loading">Уншиж байна</div>
+
       <div v-if="uploadURL">
         <p class="alert">Зураг амжилттай илгээгдлээ</p>
+      </div>
+      <div v-if="loading">Таны зургыг боловсруулж байна</div>
+      <div>
         <div class="user-form">
           <h3>Иргэний үнэмлэхний мэдээлэл</h3>
           <label>Эцэг/эх-ийн нэр: </label>
@@ -28,7 +33,7 @@
             type="text"
             name="lastName"
             disabled="true"
-            value="{this.state.userInfo.lastName}"
+            :value="userInfo.lastName"
           />
 
           <label>Өөрийн нэр: </label>
@@ -36,23 +41,23 @@
             type="text"
             name="lastName"
             disabled="true"
-            value="{this.state.userInfo.firstName}"
+            :value="userInfo.firstName"
           />
           <label>Регистрийн дугаар: </label>
           <input
             type="text"
             name="stateRegNumber"
             disabled="true"
-            value="{this.state.userInfo.stateRegNumber}"
+            :value="userInfo.stateRegNumber"
           />
           <label>Имэйл хаяг:</label>
           <input
             type="text"
             placeholder="Имэйл хаягаа оруулна уу"
-            value="{this.state.emailAddress}"
-            onChange="{this.handleChange}"
+            :value="userInfo.email"
+            v-on:change="handleChange"
           />
-          <button onClick="{this.saveInfo}">Бүртгүүлэх</button>
+          <button v-on:click="saveInfo">Бүртгүүлэх</button>
         </div>
       </div>
     </div>
@@ -64,20 +69,35 @@
 
       const API_ENDPOINT =
         "https://31ve1tfo1f.execute-api.ap-northeast-2.amazonaws.com/uploads";
-
-      const RENDER_API_ENDPOINT =
-        "https://ivgj9uylcb.execute-api.ap-northeast-2.amazonaws.com/development/endpoint";
+      //   const RENDER_API_ENDPOINT =
+      //     "https://ivgj9uylcb.execute-api.ap-northeast-2.amazonaws.com/development/endpoint";
+      const RENDER_API_ENDPOINT = "http://localhost:4000/local/endpoint";
 
       new Vue({
         el: "#app",
         data: {
+          userInfo: {},
+          alertMessage: "",
+          imageName: "4058330.jpg",
           loading: false,
           image: "",
           uploadURL: "",
-          imageName: "",
-          userInfo: {},
         },
         methods: {
+          handleChange(e) {
+            this.userInfo.email = e.target.value;
+          },
+          saveInfo: async function () {
+            if (this.userInfo.email && this.userInfo.firstName) {
+              this.userInfo.avatar = this.imageName;
+              const response = await axios.post(
+                `${RENDER_API_ENDPOINT}/saveUserInfo`,
+                { userInfo: this.userInfo }
+              );
+            } else {
+              alert("Имэйл хаягаа оруулна уу");
+            }
+          },
           onFileChange(e) {
             let files = e.target.files || e.dataTransfer.files;
             if (!files.length) return;
@@ -92,7 +112,7 @@
                 e.target.result.includes("data:image/jpeg")
               );
               if (!e.target.result.includes("data:image/jpeg")) {
-                return alert("Зөвхөн JPG өрөтгөлтэй файл оруулна уу!");
+                return alert("Wrong file type - JPG only.");
               }
               if (e.target.result.length > MAX_IMAGE_SIZE) {
                 return alert("Image is loo large.");
@@ -131,29 +151,27 @@
             // Final URL for the user doesn't need the query string params
             this.uploadURL = response.uploadURL.split("?")[0];
             this.loading = true;
+            this.imageName = response.Key;
+            console.log(this.imageName);
+            this.textract();
           },
-          startTextract: async function (imageName) {
-            const result = await fetch(`${API_ENDPOINT}/textract`, {
-              method: "POST",
-              body: {imageName},
-            });
-            this.getTextract(imageName, result.JobId);
+          textract: async function () {
+            const response = await axios.post(
+              `${RENDER_API_ENDPOINT}/textract`,
+              { imageName: this.imageName }
+            );
 
+            this.getTextract(response.JobId);
           },
-          getTextract: async function(imageName, JobId){
-
-            const result = await fetch(`${API_ENDPOINT}/textractGet`, {
-              method: "POST",
-              body: {imageName, JobId},
-            });
-            this.userInfo.firstName = result.userInfo.firstName;
-            this.userInfo.lastName = result.userInfo.lastName;
-            this.userInfo. = result.userInfo.firstName;
-            this.loading = true;
-
-
-
-          }
+          getTextract: async function (JobId) {
+            const response = await axios.post(
+              `${RENDER_API_ENDPOINT}/textractGet`,
+              { imageName: this.imageName, JobId: JobId }
+            );
+            this.userInfo = response.userInfo;
+            console.log(this.userInfo.lastName);
+            this.loading = false;
+          },
         },
       });
     </script>
