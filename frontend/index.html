@@ -1,24 +1,59 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Upload file to S3</title>
+    <title>Бүртгэл мэдээлэл</title>
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/axios@0.2.1/dist/axios.min.js"></script>
   </head>
   <body>
     <div id="app">
-      <h1>S3 Uploader Test</h1>
+      <h1>Хэрэглэгч бүртгэх хэсэг</h1>
 
       <div v-if="!image">
-        <h2>Select an image</h2>
+        <h2>Та өөрийн иргэний үнэмлэхний зурыг оруулна уу</h2>
         <input type="file" @change="onFileChange" />
       </div>
       <div v-else>
         <img :src="image" />
-        <button v-if="!uploadURL" @click="removeImage">Remove image</button>
-        <button v-if="!uploadURL" @click="uploadImage">Upload image</button>
+        <button v-if="!uploadURL" @click="removeImage">Арилгах</button>
+        <button v-if="!uploadURL" @click="uploadImage">Зураг илгээх</button>
       </div>
-      <h2 v-if="uploadURL">Success! Image uploaded to bucket.</h2>
+      <div v-if="uploadURL">
+        <p class="alert">Зураг амжилттай илгээгдлээ</p>
+        <div class="user-form">
+          <h3>Иргэний үнэмлэхний мэдээлэл</h3>
+          <label>Эцэг/эх-ийн нэр: </label>
+          <input
+            type="text"
+            name="lastName"
+            disabled="true"
+            value="{this.state.userInfo.lastName}"
+          />
+
+          <label>Өөрийн нэр: </label>
+          <input
+            type="text"
+            name="lastName"
+            disabled="true"
+            value="{this.state.userInfo.firstName}"
+          />
+          <label>Регистрийн дугаар: </label>
+          <input
+            type="text"
+            name="stateRegNumber"
+            disabled="true"
+            value="{this.state.userInfo.stateRegNumber}"
+          />
+          <label>Имэйл хаяг</label>
+          <input
+            type="text"
+            placeholder="Имэйл хаягаа оруулна уу"
+            value="{this.state.emailAddress}"
+            onChange="{this.handleChange}"
+          />
+          <button onClick="{this.saveInfo}">Бүртгүүлэх</button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -50,7 +85,7 @@
                 e.target.result.includes("data:image/jpeg")
               );
               if (!e.target.result.includes("data:image/jpeg")) {
-                return alert("Wrong file type - JPG only.");
+                return alert("Зөвхөн JPG өрөтгөлтэй файл оруулна уу!");
               }
               if (e.target.result.length > MAX_IMAGE_SIZE) {
                 return alert("Image is loo large.");
@@ -125,6 +160,9 @@
         margin: auto;
         display: block;
         margin-bottom: 10px;
+      }
+      .alert {
+        color: red;
       }
     </style>
   </body>
