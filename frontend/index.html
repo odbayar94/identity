@@ -89,9 +89,9 @@
 
       const API_ENDPOINT =
         "https://31ve1tfo1f.execute-api.ap-northeast-2.amazonaws.com/uploads";
-      const RENDER_API_ENDPOINT =
-        "https://ivgj9uylcb.execute-api.ap-northeast-2.amazonaws.com/development/endpoint";
-      // const RENDER_API_ENDPOINT = "http://localhost:4000/local/endpoint";
+      // const RENDER_API_ENDPOINT =
+      // "https://ivgj9uylcb.execute-api.ap-northeast-2.amazonaws.com/development/endpoint";
+      const RENDER_API_ENDPOINT = "http://localhost:4000/local/endpoint";
 
       new Vue({
         el: "#app",
@@ -132,7 +132,7 @@
                   `${RENDER_API_ENDPOINT}/saveUserInfo`,
                   { userInfo: this.userInfo }
                 );
-                console.log("stauts: ", response.status);
+                // console.log("stauts: ", response.status);
                 if (response.status) {
                   this.popmessage = "Таны мэдээллийг амжилттай хадгаллаа";
                   this.userInfo = {};
@@ -171,6 +171,7 @@
           },
           removeImage: function (e) {
             this.image = "";
+            this.popmessage = "";
           },
           uploadImage: async function (e) {
             this.loading = true;
@@ -202,7 +203,7 @@
             this.textract();
           },
           textract: async function () {
-            this.loadingMessage = "Иргэний үнэмлэхний мэдээллийг илгээж байна";
+            this.loadingMessage = "Зургийн мэдээллийг илгээж байна";
             try {
               const response = await axios.post(
                 `${RENDER_API_ENDPOINT}/textract`,
@@ -211,24 +212,31 @@
               this.getTextract(response.JobId);
             } catch (error) {
               this.loading = false;
-              this.popmessage = "Зураг боловсруулахад алдаа гарлаа";
+              this.popmessage =
+                "Зураг боловсруулахад алдаа гарлаа, дахин оролдно уу";
+              this.uploadURL = "";
               this.popColor = "red";
               console.log("error: ", error);
             }
           },
           getTextract: async function (JobId) {
             this.popmessage = null;
-            this.loadingMessage =
-              "Иргэний үнэмлэхний мэдээллийг боловсруулж байна";
+            this.loadingMessage = "Зургийн мэдээллийг боловсруулж байна";
             const response = await axios.post(
               `${RENDER_API_ENDPOINT}/textractGet`,
               { imageName: this.imageName, JobId: JobId }
             );
-            this.userInfo = response.userInfo;
+            if (response.status) {
+              this.popmessage =
+                "Зураг боловсруулж дууслаа, имэйл хаягаа оруулж бүртүүлнэ үү";
+              this.userInfo = response.userInfo;
+            } else {
+              this.popmessage =
+                "Таны зургийг боловсруулахад алдаа гарлаа, дахин оролдоно уу";
+              this.uploadURL = "";
+            }
 
             this.loading = false;
-            this.popmessage =
-              "Зураг боловсруулж дууслаа, имэйл хаягаа оруулж бүртүүлнэ үү";
           },
         },
       });

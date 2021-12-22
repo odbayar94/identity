@@ -35,11 +35,19 @@ export default async function ({ event }) {
   } while (response.NextToken);
   
   findArray = Blocks;
+  const firstName = firstNameFind();
+  console.log(firstName);
+  if (!firstName) {
+    return generateResponse(200, {
+      status: false,
+      userInfo: {},
+    });
+  }
   // # All Text By Line
   return generateResponse(200, {
     status: true,
     userInfo: {
-      firstName: firstName(),
+      firstName,
       lastName: searchData("WORD", "Surname", 1),
       stateRegNumber: searchData("WORD", "number", 3),
     },
@@ -54,16 +62,19 @@ function sleep(ms) {
 
 
 
-function firstName() {
+function firstNameFind() {
   const firstNameObj = findArray.find(
     (element) =>
       element.BlockType === "LINE" &&
       element.Text.slice(4, element.Text.length) === "Given name"
   );
+  if (firstNameObj) {
+    const firstNameIndex = findArray.indexOf(firstNameObj);
 
-  const firstNameIndex = findArray.indexOf(firstNameObj);
-
-  return findArray[firstNameIndex + 2].Text;
+    return findArray[firstNameIndex + 2].Text;
+  } else {
+    return false;
+  }
 }
 
 function searchData(type, text, afterIndex) {
