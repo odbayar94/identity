@@ -7,7 +7,7 @@ export default async function ({ event }) {
   const requestBody = event && event.body ? JSON.parse(event.body) : {};
   try {
     await connectDb();
-    const {email, firstName, lastName, stateRegNumber,avatar} = requestBody;
+    const {email, firstName, lastName, stateRegNumber,avatar} = requestBody.userInfo;
     
     try {
       const existingUser = await User.findOne({
@@ -16,8 +16,9 @@ export default async function ({ event }) {
 
       // If user with given email exists, it should return 403
       if (existingUser) {
-        return generateResponse(403, {
-          message: "User exists",
+        return generateResponse(200, {
+          status: false,
+          message: "Имэйл хаяг бүртгэгдсэн байна",
         });
       }
     } catch (e) {
@@ -32,10 +33,14 @@ export default async function ({ event }) {
     });
 
     return generateResponse(201, {
-      message: "User created",
+      status: true,
+      message: "Амжилттай хадгаллаа",
     });
   } catch (e) {
     console.log(e);
-    throw HTTP_ERROR_400;
+    return generateResponse(403, {
+      status: false,
+      message: "Хэрэглэгч бүртгэхэд алдаа гарлаа",
+    });
   }
 }

@@ -10,57 +10,74 @@
   </head>
   <body>
     <div id="app">
+      <div
+        v-if="popmessage"
+        class="alert"
+        v-bind:class="{'background-color': popColor }"
+      >
+        <strong>Сонордуулга! </strong>{{popmessage}}
+      </div>
       <h1>Хэрэглэгч бүртгэх хэсэг</h1>
-      <!-- <h1>{{userInfo.lastName}}</h1> -->
 
       <div v-if="!image">
-        <h2>Та өөрийн иргэний үнэмлэхний зурыг оруулна уу</h2>
+        <h3>Та өөрийн иргэний үнэмлэхний зургийг оруулна уу</h3>
         <input type="file" @change="onFileChange" />
       </div>
+
       <div v-else>
         <img :src="image" />
 
-        <button v-if="!uploadURL" @click="removeImage">Арилгах</button>
+        <button v-if="!uploadURL" @click="removeImage">Солих</button>
         <button v-if="!uploadURL" @click="uploadImage">Зураг илгээх</button>
       </div>
-
-      <div v-if="uploadURL">
-        <p class="alert">Зураг амжилттай илгээгдлээ</p>
+      <div v-if="loading" class="loader-section">
+        <div class="loader"></div>
+        <div><p>{{loadingMessage}}</p></div>
       </div>
-      <div v-if="loading">Таны зургыг боловсруулж байна</div>
-      <div v-if="uploadURL">
+
+      <div v-if="userInfo.firstName">
+        <!-- <div> -->
         <div class="user-form">
           <h3>Иргэний үнэмлэхний мэдээлэл</h3>
-          <label>Эцэг/эх-ийн нэр: </label>
-          <input
-            type="text"
-            name="lastName"
-            disabled="true"
-            :value="userInfo.lastName"
-          />
-
-          <label>Өөрийн нэр: </label>
-          <input
-            type="text"
-            name="lastName"
-            disabled="true"
-            :value="userInfo.firstName"
-          />
-          <label>Регистрийн дугаар: </label>
-          <input
-            type="text"
-            name="stateRegNumber"
-            disabled="true"
-            :value="userInfo.stateRegNumber"
-          />
-          <label>Имэйл хаяг:</label>
-          <input
-            type="text"
-            placeholder="Имэйл хаягаа оруулна уу"
-            :value="userInfo.email"
-            v-on:change="handleChange"
-          />
-          <button v-on:click="saveInfo">Бүртгүүлэх</button>
+          <div class="label">
+            <label>Эцэг/эх-ийн нэр: </label>
+            <input
+              type="text"
+              name="lastName"
+              disabled="true"
+              :value="userInfo.lastName"
+            />
+          </div>
+          <div class="label">
+            <label>Өөрийн нэр: </label>
+            <input
+              type="text"
+              name="lastName"
+              disabled="true"
+              :value="userInfo.firstName"
+            />
+          </div>
+          <div class="label">
+            <label>Регистрийн дугаар: </label>
+            <input
+              type="text"
+              name="stateRegNumber"
+              disabled="true"
+              :value="userInfo.stateRegNumber"
+            />
+          </div>
+          <div class="label">
+            <label>Имэйл хаяг:</label>
+            <input
+              type="text"
+              placeholder="Имэйл хаягаа оруулна уу"
+              :value="userInfo.email"
+              v-on:change="handleChange"
+            />
+          </div>
+          <div class="label-btn">
+            <button v-on:click="saveInfo">Бүртгүүлэх</button>
+          </div>
         </div>
       </div>
     </div>
@@ -79,6 +96,9 @@
       new Vue({
         el: "#app",
         data: {
+          popColor: "green",
+          popmessage: "",
+          loadingMessage: "",
           userInfo: {},
           alertMessage: "",
           imageName: "4058330.jpg",
@@ -90,13 +110,40 @@
           handleChange(e) {
             this.userInfo.email = e.target.value;
           },
+          emailValid: function () {
+            if (
+              /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(
+                this.userInfo.email
+              )
+            ) {
+              return true;
+            }
+            alert("Имэйл хаягаа шалгаад зөв имэйл хаяг оруулна уу");
+            return false;
+          },
           saveInfo: async function () {
+            this.popmessage = null;
             if (this.userInfo.email && this.userInfo.firstName) {
               this.userInfo.avatar = this.imageName;
-              const response = await axios.post(
-                `${RENDER_API_ENDPOINT}/saveUserInfo`,
-                { userInfo: this.userInfo }
-              );
+              if (this.emailValid()) {
+                this.loading = true;
+                this.loadingMessage = "Таны мэдээллийг хадгалж байна";
+                const response = await axios.post(
+                  `${RENDER_API_ENDPOINT}/saveUserInfo`,
+                  { userInfo: this.userInfo }
+                );
+                console.log("stauts: ", response.status);
+                if (response.status) {
+                  this.popmessage = "Таны мэдээллийг амжилттай хадгаллаа";
+                  this.userInfo = {};
+                  this.image = "";
+                  this.loading = false;
+                  this.uploadURL = "";
+                } else {
+                  this.popmessage = response.message;
+                  this.loading = false;
+                }
+              }
             } else {
               alert("Имэйл хаягаа оруулна уу");
             }
@@ -107,8 +154,10 @@
             this.createImage(files[0]);
           },
           createImage(file) {
-            // var image = new Image()
+            // var image = new Image();
             let reader = new FileReader();
+            this.popmessage = null;
+
             reader.onload = (e) => {
               if (!e.target.result.includes("data:image/jpeg")) {
                 return alert("Wrong file type - JPG only.");
@@ -124,6 +173,8 @@
             this.image = "";
           },
           uploadImage: async function (e) {
+            this.loading = true;
+            this.loadingMessage = "Зураг илгээж байна";
             // Get the presigned URL
             const response = await axios({
               method: "GET",
@@ -138,6 +189,7 @@
             let blobData = new Blob([new Uint8Array(array)], {
               type: "image/jpeg",
             });
+            this.loadingMessage = "Зураг хадгалж байна";
             const result = await fetch(response.uploadURL, {
               method: "PUT",
               body: blobData,
@@ -146,17 +198,28 @@
             this.uploadURL = response.uploadURL.split("?")[0];
             this.loading = true;
             this.imageName = response.Key;
+            this.popmessage = "Зураг амжилттай хадгаллаа";
             this.textract();
           },
           textract: async function () {
-            const response = await axios.post(
-              `${RENDER_API_ENDPOINT}/textract`,
-              { imageName: this.imageName }
-            );
-
-            this.getTextract(response.JobId);
+            this.loadingMessage = "Иргэний үнэмлэхний мэдээллийг илгээж байна";
+            try {
+              const response = await axios.post(
+                `${RENDER_API_ENDPOINT}/textract`,
+                { imageName: this.imageName }
+              );
+              this.getTextract(response.JobId);
+            } catch (error) {
+              this.loading = false;
+              this.popmessage = "Зураг боловсруулахад алдаа гарлаа";
+              this.popColor = "red";
+              console.log("error: ", error);
+            }
           },
           getTextract: async function (JobId) {
+            this.popmessage = null;
+            this.loadingMessage =
+              "Иргэний үнэмлэхний мэдээллийг боловсруулж байна";
             const response = await axios.post(
               `${RENDER_API_ENDPOINT}/textractGet`,
               { imageName: this.imageName, JobId: JobId }
@@ -164,6 +227,8 @@
             this.userInfo = response.userInfo;
 
             this.loading = false;
+            this.popmessage =
+              "Зураг боловсруулж дууслаа, имэйл хаягаа оруулж бүртүүлнэ үү";
           },
         },
       });
@@ -172,7 +237,7 @@
       body {
         background: #20262e;
         padding: 20px;
-        font-family: sans-serif;
+        font-family: "Roboto", sans-serif;
       }
       #app {
         background: #fff;
@@ -202,8 +267,105 @@
         display: block;
         margin-bottom: 10px;
       }
+      .loader {
+        margin: auto;
+        width: 50%;
+        border: 16px solid #bee1f1;
+        border-radius: 50%;
+        border-top: 16px solid #3498db;
+        width: 40px;
+        height: 40px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+      }
+      .loader-section {
+        display: flex;
+        flex-direction: column;
+        margin: auto;
+        width: 50%;
+        padding: 10px;
+      }
+      /* Safari */
+      @-webkit-keyframes spin {
+        0% {
+          -webkit-transform: rotate(0deg);
+        }
+        100% {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
       .alert {
-        color: red;
+        margin: auto;
+        width: 30%;
+        padding: 20px;
+        background-color: #6669f8;
+        color: white;
+      }
+
+      .closebtn {
+        margin-left: 15px;
+        color: white;
+        font-weight: bold;
+        float: right;
+        font-size: 22px;
+        line-height: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      .closebtn:hover {
+        color: black;
+      }
+
+      .user-form {
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+        margin: auto;
+        width: 40%;
+      }
+      .label {
+        margin: 5px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .label > label {
+        font-weight: 650;
+      }
+
+      .label > input {
+        height: 25px;
+        padding: 2px 5px;
+        width: 160px;
+        font-weight: 500;
+        color: #6669f8;
+      }
+      .label-btn {
+        margin: 5px;
+        display: flex;
+        justify-content: end;
+      }
+      .label-btn > button {
+        background-color: #6669f8;
+        border-radius: 20px;
+        height: 35px;
+        color: #e1e8eb;
+        font-weight: 700;
+        width: 100px;
+      }
+      .label-btn > button:hover {
+        background-color: #2a78ac;
+        color: #b9c1c5;
       }
     </style>
   </body>
