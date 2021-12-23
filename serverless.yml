@@ -50,6 +50,7 @@ provider:
         - execute-api:*
         - s3:*
         - ses:*
+        - textract:*
       Resource: "*"
 
 functions:

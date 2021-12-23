@@ -16,13 +16,21 @@ export default async function ({ event }) {
     },
     FeatureTypes: ["FORMS"],
   };
+  try{
 
-  const analysis = await textract.startDocumentAnalysis(ttparams).promise();
-  const JobId = analysis.JobId;
-
-   return generateResponse(200, {
-     status: true,
-     JobId
-   });
+    const analysis = await textract.startDocumentAnalysis(ttparams).promise();
+    const JobId = analysis.JobId;
+  
+     return generateResponse(200, {
+       status: true,
+       JobId
+     });
+  }catch(err){
+    console.log(err);
+    return generateResponse(401, {
+      status: false,
+      message: err
+    });
+  }
  
 };
